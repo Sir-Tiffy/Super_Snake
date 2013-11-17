@@ -1,22 +1,19 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<script src = "game.js"></script>
+		<title>Super Snake!</title>
+		<style type="text/css">@import "stylesheet.css";</style>
 	</head>
-	<body onkeydown="onKeyDown(event)" onkeyup="onKeyUp(event)">
-		<canvas
-			id = "screen"
-			width = "800"
-			height = "600"
-			style = "
-				display:block;
-				margin-left:auto;
-				margin-right:auto;
-			"
-			onmousedown="onMouseDown(event)"
-			onmouseup="onMouseUp(event)"
-		></canvas>
-		<script>begin()</script>
-		<audio src="song.mp3" autoplay loop></audio>
+	<body>
+
+		<canvas	id = "screen" width = "700" height = "190"></canvas>
+		<div class="centered">
+			<a id = "startButton" class = "large" href="game.html" hidden=true>Start!</a>
+		</div>
+		<p class = "warning" id = "javascriptWarning">Please enable javascript!</p>
+		<p class = "warning" id = "html5Warning" hidden=true></p>
+
+		<script src="engine.js"></script>
+		<script src="menu.js"></script>
 	</body>
 </html>

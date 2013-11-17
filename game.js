@@ -1,99 +1,115 @@
-var canvas
-var ctx
-var date = new Date();
 
-var game = {
-	fps:30,
-	time: 0,
-	deltaTime:0,
-	width:800,
-	height:600,
-	backgroundColour:"#202020",
-	keys:{
-		left:false,
-		up:false,
-		right:false,
-		down:false
-	},
-	updateFunc: updateMenu,
-	renderFunc: renderMenu
+var gameWidth = 16
+var gameHeight = 16
+var squareSize = 24
+var squareGap = 2
+var squareSpacing = squareSize + squareGap
+var score = 0
+var rot = 0
+var snakeColour = "lightgrey"
+var snakeHeadColour = "blue"
+var foodColour = "red"
+var snakeLength = 2
+var snakeDir = 0
+var snake = []
+var food = {}
+var moveDelay = .75
+var rotSpeed = 0
+var moveTime
+
+game.onKeyDown = function(event){
+	if (event.keyIdentifier == "Up") snakeDir = 0;
+	else if (event.keyIdentifier == "Right") snakeDir = 1;
+	else if (event.keyIdentifier == "Down") snakeDir = 2;
+	else if (event.keyIdentifier == "Left") snakeDir = 3;
 }
 
-function clamp(num, min, max){
-	if (num < min) return min;
-	if (num > max) return max;
-	return num;
+game.initFunc = function(){
+	moveTime = game.time + moveDelay
+	snake[0] = {x:gameWidth/2, y:gameHeight/2}
+	snake[1] = {x:gameWidth/2, y:gameHeight/2+1}
+	food = {x:Math.floor(Math.random()*gameWidth),y:Math.floor(Math.random()*gameHeight)}
 }
 
-function GetColourFromHue(hue){
-	var modx = (hue%360.0)/60.0
-	return "rgb("+Math.round((Math.abs(modx-3)-1)*255)+','+Math.round((2-Math.abs(modx-2))*255)+','+Math.round((2-Math.abs(modx-4))*255)+')'
+game.updateFunc = function(){
+	rot += game.deltaTime*rotSpeed;
+	if (game.time > moveTime){
+		moveTime += moveDelay
+		var newX = snake[0].x
+		var newY = snake[0].y
+		if (snakeDir == 3){
+			newX -= 1;
+			if (newX < 0) newX = gameWidth-1
+		} else if (snakeDir == 1){
+			newX += 1;
+			if (newX > gameWidth - 1) newX = 0
+		} else if (snakeDir == 0){
+			newY -= 1;
+			if (newY < 0) newY = gameHeight -1
+		}else if (snakeDir == 2){
+			newY += 1;
+			if (newY > gameHeight-1) newY = 0
+		}
+		var newPiece;
+		if (newX == food.x && newY == food.y){
+			food = {x:Math.floor(Math.random()*gameWidth),y:Math.floor(Math.random()*gameHeight)}
+			newPiece = {}
+			snakeLength += 1
+			score += 1
+			moveDelay /= 1.1
+			if (score == 3) rotSpeed = 1/100;
+			else if (score > 3) rotSpeed *= 1.25;
+			console.log(rotSpeed)
+		} else newPiece = snake.pop()
+		newPiece.x = newX
+		newPiece.y = newY
+		snake.unshift(newPiece)
+	}
 }
 
-function onMouseDown(event){
-	/*var button = event.button //0: left, 1: middle, 2: right
-	var x = event.offsetX
-	var y = event.offsetY
-	ctx.fillStyle = "Black"
-	ctx.fillRect(x,y,64,64)*/
-}
-
-function onMouseUp(event){
-
-}
-
-function onKeyDown(event){
-	/*var key = event.keyCode
-	ctx.font = " 30px Arial"
-	ctx.fillStyle = "#ff0000"
-	ctx.fillText(key,32,32)*/
-}
-
-function onKeyUp(event){
-
-}
-
-function renderMenu(){
-	var title = "SUPER SNAKE"
-	ctx.font = "96px Comic Sans MS"
-	ctx.fillStyle = GetColourFromHue(game.time*90)
-	var x = game.width/2 - ctx.measureText(title).width/2 + 8*Math.cos(game.time*3)
-	var y = 112 + 32*Math.sin(game.time)
-	ctx.fillText(title,x,y)
-	ctx.fillStyle = "Black"
-	ctx.strokeText(title,x,y)
-}
-
-function initMenu(){
+game.renderFunc = function(){
 	ctx.fillStyle = game.backgroundColour
-	ctx.fillRect(0,0,game.width,game.height)
+	ctx.fillRect(0,0,canvas.width,canvas.height)
+
+	ctx.translate(canvas.width/2, canvas.height/2)
+	ctx.rotate(rot)
+	ctx.translate(-canvas.width/2,-canvas.height/2)
+
+	//ctx.fillStyle = squareColourDefault
+	/*var xStart = canvas.width/2-(gameWidth*(squareSize+squareGap)+squareGap)/2
+	var yStart = canvas.height/2-(gameWidth*(squareSize+squareGap)+squareGap)/2
+	for (var x = 0; x < gameWidth; x++){
+		for (var y = 0; y < gameHeight; y++){
+			ctx.fillRect(xStart + x*squareSpacing,yStart + y*squareSpacing,squareSize,squareSize)
+		}
+	}*/
+
+	var width = gameWidth*(squareSize+squareGap)+squareGap
+	var height = gameHeight*(squareSize+squareGap)+squareGap
+	var left = canvas.width/2-width/2
+	var top = canvas.height/2-height/2
+
+
+	var grad = ctx.createLinearGradient(0,top,0,top+height)
+	grad.addColorStop(0,"#b0a0a0")
+	grad.addColorStop(1,"#402020")
+	ctx.fillStyle = grad
+	ctx.fillRect(left,top,width,height)
+
+	ctx.fillStyle = snakeColour
+	for (var i = 1; i < snakeLength; i++){
+		var piece = snake[i]
+		ctx.fillRect(left+squareGap+piece.x*squareSpacing,top+squareGap+piece.y*squareSpacing,squareSize,squareSize)
+	}
+	ctx.fillStyle = snakeHeadColour	
+	ctx.fillRect(left+squareGap+snake[0].x*squareSpacing,top+squareGap+snake[0].y*squareSpacing,squareSize,squareSize)
+
+	ctx.fillStyle = foodColour
+	ctx.fillRect(left+squareGap+food.x*squareSpacing,top+squareGap+food.y*squareSpacing,squareSize,squareSize)
+
+	ctx.translate(canvas.width/2, canvas.height/2)
+	ctx.rotate(-rot)
+	ctx.translate(-canvas.width/2,-canvas.height/2)
 }
 
-function updateMenu(){
-}
-
-function updateGame(){
-
-}
-
-function renderGame(){
-
-}
-
-function update(){
-	game.time += game.deltaTime
-	game.updateFunc()
-	game.renderFunc()
-}
-
-function begin(){
-	canvas = document.getElementById("screen");
-	ctx = canvas.getContext("2d")
-
-	game.deltaTime = 1/game.fps
-
-	game.width = canvas.width
-	game.height = canvas.height
-	initMenu()
-	setInterval(update, 1000/game.fps)
-}
+main()

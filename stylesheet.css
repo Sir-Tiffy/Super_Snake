@@ -1,0 +1,29 @@
+body{
+	background-color:#202020;
+}
+#screen{
+	display:block;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+.centered{
+	display:block;
+	text-align:center;
+}
+
+.large{
+	font-family:"Comic Sans MS";
+	font-size:64px;
+	color:red;
+}
+
+.warning{
+	color:white;
+	text-align:center;
+	font-size:32px;
+	font-family:"Consolas";
+	background-color:red;
+	border-width:2px;
+	border-style:solid;
+}
