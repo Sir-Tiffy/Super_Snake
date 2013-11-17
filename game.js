@@ -55,7 +55,7 @@ function onKeyUp(event){
 
 function renderMenu(){
 	var title = "SUPER SNAKE"
-	ctx.font = "96px Comic Sans Ms"
+	ctx.font = "96px Comic Sans MS"
 	ctx.fillStyle = GetColourFromHue(game.time*90)
 	var x = game.width/2 - ctx.measureText(title).width/2 + 8*Math.cos(game.time*3)
 	var y = 112 + 32*Math.sin(game.time)
