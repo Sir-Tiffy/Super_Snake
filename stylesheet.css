@@ -7,17 +7,6 @@ body{
 	margin-right:auto;
 }
 
-.centered{
-	display:block;
-	text-align:center;
-}
-
-.large{
-	font-family:"Comic Sans MS";
-	font-size:64px;
-	color:red;
-}
-
 .warning{
 	color:white;
 	text-align:center;

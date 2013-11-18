@@ -1,115 +1,249 @@
-
-var gameWidth = 16
-var gameHeight = 16
-var squareSize = 24
-var squareGap = 2
-var squareSpacing = squareSize + squareGap
-var score = 0
-var rot = 0
-var snakeColour = "lightgrey"
+var fps = 60
+var gameDots = 16
+var moveDelay = .1
+var backgroundColour = "#202020"
+var gameBottomColour = "#000000"
+var gameTopColour = "#404040"
+var snakeColour = "white"
 var snakeHeadColour = "blue"
 var foodColour = "red"
-var snakeLength = 2
-var snakeDir = 0
+var squareGapFraction = 1/8
+
+var canvas
+var ctx
+var foodSound
+var dieSound
+var song
+
 var snake = []
 var food = {}
-var moveDelay = .75
-var rotSpeed = 0
-var moveTime
+var snakeSize
+var score = 0
+var moveTime = 0
+var rotationSpeed = 0
+var backgroundFade = 0
+var titleFade = 0
+var titleWobble = 0
+var currentRotation = 0
+var gameTop = 190
+var snakeDir = 0
+var time = 0
+var squareSize
+var squareGap
+var squareSpacing
+var gameDiag
+var gameScreenWidth
+var gameScreenHeight
+var gameSize
+var gameCentreX
+var gameCentreY
+var deltaTime
 
-game.onKeyDown = function(event){
-	if (event.keyIdentifier == "Up") snakeDir = 0;
-	else if (event.keyIdentifier == "Right") snakeDir = 1;
-	else if (event.keyIdentifier == "Down") snakeDir = 2;
-	else if (event.keyIdentifier == "Left") snakeDir = 3;
+function GetColourFromHue(hue, scale, defaultR, defaultG, defaultB){
+	var modx = (hue%360.0)/60.0
+	return "rgb("+Math.round((Math.abs(modx-3)-1)*scale*(255-defaultR)+defaultR)+','+Math.round((2-Math.abs(modx-2))*scale*(255-defaultG)+defaultG)+','+Math.round((2-Math.abs(modx-4))*scale*(255-defaultB)+defaultB)+')'
 }
 
-game.initFunc = function(){
-	moveTime = game.time + moveDelay
-	snake[0] = {x:gameWidth/2, y:gameHeight/2}
-	snake[1] = {x:gameWidth/2, y:gameHeight/2+1}
-	food = {x:Math.floor(Math.random()*gameWidth),y:Math.floor(Math.random()*gameHeight)}
+function isEmptySpot(x,y,start){
+	if (!start) start = 0;
+	for (var i = start; i < snakeSize; i++){
+		if (snake[i].x == x && snake[i].y == y) return false
+	}
+	return true
 }
 
-game.updateFunc = function(){
-	rot += game.deltaTime*rotSpeed;
-	if (game.time > moveTime){
+function placeFood(){
+	while (true) {
+		var X = Math.floor(Math.random()*gameDots)
+		var Y = Math.floor(Math.random()*gameDots)
+		if (isEmptySpot(X,Y)) return {x:X, y:Y}
+	}
+}
+
+
+function drawDot(x,y,colour){
+	if (!!colour) ctx.fillStyle = colour
+	ctx.fillRect(gameCentreX - gameSize/2 + squareGap + x*squareSpacing, 
+	gameCentreY - gameSize/2 + squareGap + y*squareSpacing, 
+	squareSize,squareSize)
+}
+
+function startGame(){
+	song.pause()
+	snakeDir = 0
+	score = 0
+	snakeSize = 2
+	snake[0] = {x:Math.floor(gameDots/2),y:Math.floor(gameDots/2)}
+	snake[1] = {x:Math.floor(gameDots/2),y:Math.floor(gameDots/2)+1}
+	food = placeFood()
+}
+
+function onKeyDown(event){
+	switch(event.keyIdentifier){
+		case "Up": case "U+0057": snakeDir = (snakeDir==2)?snakeDir:0; break;
+		case "Right": case "U+0044": snakeDir = (snakeDir==3)?snakeDir:snakeDir = 1; break;
+		case "Down": case "U+0053": snakeDir = (snakeDir==0)?snakeDir:snakeDir = 2; break;
+		case "Left": case "U+0041": snakeDir = (snakeDir==1)?snakeDir:snakeDir = 3; break;
+		case "U+0052": startGame(); break;
+		default: console.log(event.keyIdentifier)
+	}
+}
+
+function renderTitle(){
+	var title = "SUPER SNAKE"
+	var rotAmount = Math.cos(time*5)*Math.PI/64 * titleWobble
+	ctx.translate(canvas.width/2, 64)//canvas.height/2)
+	ctx.rotate(rotAmount)
+	ctx.translate(-canvas.width/2, -64)//-canvas.height/2)
+
+	ctx.fillStyle = GetColourFromHue(time*90, titleFade, 96,96,96)
+	ctx.font = "96px Comic Sans MS"
+	var x = canvas.width/2 - ctx.measureText(title).width/2 + 8*Math.cos(time*3)*titleWobble
+	var y = 128 + 32*Math.sin(time)*titleWobble
+	ctx.fillText(title,x,y)
+	ctx.fillStyle = "Black"
+	ctx.strokeText(title,x,y)
+
+	ctx.translate(canvas.width/2, 64)//canvas.height/2)
+	ctx.rotate(-rotAmount)
+	ctx.translate(-canvas.width/2, -64)//-canvas.height/2)
+}
+
+function updateGame(){
+	if (time >= moveTime){
 		moveTime += moveDelay
 		var newX = snake[0].x
 		var newY = snake[0].y
-		if (snakeDir == 3){
-			newX -= 1;
-			if (newX < 0) newX = gameWidth-1
-		} else if (snakeDir == 1){
-			newX += 1;
-			if (newX > gameWidth - 1) newX = 0
-		} else if (snakeDir == 0){
-			newY -= 1;
-			if (newY < 0) newY = gameHeight -1
-		}else if (snakeDir == 2){
-			newY += 1;
-			if (newY > gameHeight-1) newY = 0
+		switch(snakeDir){
+			case 0:
+				newY -= 1
+				if (newY < 0) newY = gameDots - 1
+				break;
+			case 1:
+				newX += 1
+				if (newX > gameDots-1) newX = 0
+				break;
+			case 2:
+				newY += 1
+				if (newY > gameDots-1) newY = 0
+				break;
+			case 3:
+				newX -= 1
+				if (newX < 0) newX = gameDots - 1
+				break;
 		}
-		var newPiece;
+		var newDot
 		if (newX == food.x && newY == food.y){
-			food = {x:Math.floor(Math.random()*gameWidth),y:Math.floor(Math.random()*gameHeight)}
-			newPiece = {}
-			snakeLength += 1
+			snake.unshift({x:newX, y:newY})
+			food = placeFood()
 			score += 1
-			moveDelay /= 1.1
-			if (score == 3) rotSpeed = 1/100;
-			else if (score > 3) rotSpeed *= 1.25;
-			console.log(rotSpeed)
-		} else newPiece = snake.pop()
-		newPiece.x = newX
-		newPiece.y = newY
-		snake.unshift(newPiece)
+			snakeSize += 1
+			foodSound.play()
+			if (score == 9) song.play()
+			else if (score == 10) song.pause()
+		} else if (!isEmptySpot(newX, newY)){
+			dieSound.play()
+			startGame()
+		} else {
+			newDot = snake.pop()
+			newDot.x = newX
+			newDot.y = newY
+			snake.unshift(newDot)
+		}
 	}
+
+	if (score < 3 && titleWobble > 0){
+		titleWobble -= deltaTime*titleWobble/2
+		if (titleWobble < 0.01){
+			titleWobble = 0
+			ctx.clearRect(0,0,gameScreenWidth, gameTop)
+		}
+	} else if (score >= 3 && titleWobble < 1){
+		titleWobble +=deltaTime*(1-titleWobble)/8;
+	}
+	if (score < 6 && titleFade > 0){
+		titleFade -= deltaTime*titleFade/2
+	} else if (score >= 6 && titleFade < 1){
+		titleFade +=deltaTime*(1-titleFade)/8;
+	}
+	rotationSpeed += deltaTime*(score-rotationSpeed-10)/4;
+	if (score > 10) currentRotation += deltaTime*(rotationSpeed*5);
+	else currentRotation -= deltaTime*currentRotation;
+
+	if (currentRotation > 360) currentRotation -= 360
+	if (currentRotation < 0) currentRotation += 360
+
+	if (backgroundFade < .75 && score > 8){
+		backgroundFade += deltaTime/8.0;
+		if (backgroundFade > .75) backgroundFade = .75;
+	} else if (score <= 8 && backgroundFade > 0){
+		backgroundFade -= deltaTime/8.0;
+		if (backgroundFade < 0) backgroundFade = 0;
+	}
+	backgroundColour = GetColourFromHue(currentRotation, backgroundFade,20,20,20)
 }
 
-game.renderFunc = function(){
-	ctx.fillStyle = game.backgroundColour
-	ctx.fillRect(0,0,canvas.width,canvas.height)
+function renderGame(){
 
-	ctx.translate(canvas.width/2, canvas.height/2)
-	ctx.rotate(rot)
-	ctx.translate(-canvas.width/2,-canvas.height/2)
+	ctx.fillStyle = backgroundColour
+	ctx.fillRect(Math.floor(gameCentreX-gameDiag/2-1),Math.floor(gameCentreY-gameDiag/2-2),Math.ceil(gameDiag+3),Math.ceil(gameDiag+3))
 
-	//ctx.fillStyle = squareColourDefault
-	/*var xStart = canvas.width/2-(gameWidth*(squareSize+squareGap)+squareGap)/2
-	var yStart = canvas.height/2-(gameWidth*(squareSize+squareGap)+squareGap)/2
-	for (var x = 0; x < gameWidth; x++){
-		for (var y = 0; y < gameHeight; y++){
-			ctx.fillRect(xStart + x*squareSpacing,yStart + y*squareSpacing,squareSize,squareSize)
-		}
-	}*/
+	ctx.translate(gameCentreX, gameCentreY)
+	ctx.rotate(currentRotation*Math.PI/180)
+	ctx.translate(-gameCentreX, -gameCentreY)
 
-	var width = gameWidth*(squareSize+squareGap)+squareGap
-	var height = gameHeight*(squareSize+squareGap)+squareGap
-	var left = canvas.width/2-width/2
-	var top = canvas.height/2-height/2
-
-
-	var grad = ctx.createLinearGradient(0,top,0,top+height)
-	grad.addColorStop(0,"#b0a0a0")
-	grad.addColorStop(1,"#402020")
+	var grad = ctx.createLinearGradient(0,gameCentreY - gameSize/2,0,gameCentreY + gameSize/2)
+	grad.addColorStop(0,gameTopColour)
+	grad.addColorStop(1,gameBottomColour)
 	ctx.fillStyle = grad
-	ctx.fillRect(left,top,width,height)
+	ctx.fillRect(gameCentreX-gameSize/2,gameCentreY-gameSize/2,gameSize,gameSize)
 
 	ctx.fillStyle = snakeColour
-	for (var i = 1; i < snakeLength; i++){
-		var piece = snake[i]
-		ctx.fillRect(left+squareGap+piece.x*squareSpacing,top+squareGap+piece.y*squareSpacing,squareSize,squareSize)
+	for (var i = 1; i < snakeSize; i++){
+		drawDot(snake[i].x,snake[i].y)
 	}
-	ctx.fillStyle = snakeHeadColour	
-	ctx.fillRect(left+squareGap+snake[0].x*squareSpacing,top+squareGap+snake[0].y*squareSpacing,squareSize,squareSize)
+	drawDot(food.x, food.y, foodColour)
+	drawDot(snake[0].x, snake[0].y, snakeHeadColour)
 
-	ctx.fillStyle = foodColour
-	ctx.fillRect(left+squareGap+food.x*squareSpacing,top+squareGap+food.y*squareSpacing,squareSize,squareSize)
+	ctx.translate(gameCentreX, gameCentreY)
+	ctx.rotate(-currentRotation*Math.PI/180)
+	ctx.translate(-gameCentreX, -gameCentreY)
 
-	ctx.translate(canvas.width/2, canvas.height/2)
-	ctx.rotate(-rot)
-	ctx.translate(-canvas.width/2,-canvas.height/2)
+	document.body.style.backgroundColor = backgroundColour
 }
 
-main()
+function loop(){
+	time += deltaTime
+	renderTitle()
+	updateGame()
+	renderGame()
+}
+
+
+document.body.removeChild(document.getElementById("javascriptWarning"))
+
+canvas = document.getElementById("screen");
+ctx = canvas.getContext("2d")
+if (!ctx){
+	document.body.getElementById("html5Warning").innerHTML = "Please use a modern HTML5-Compatible browser!"
+	return
+}
+
+foodSound = document.getElementById("foodSound")
+dieSound = document.getElementById("dieSound")
+song = document.getElementById("song")
+
+deltaTime = 1.0/fps
+gameScreenWidth = canvas.width
+gameScreenHeight = canvas.height-gameTop
+gameDiag = (gameScreenWidth < gameScreenHeight)?gameScreenWidth:gameScreenHeight
+gameSize = gameDiag/Math.sqrt(2)
+gameCentreX = gameScreenWidth/2
+gameCentreY = gameTop+gameScreenHeight/2
+
+squareSize = gameSize/(gameDots*(1+squareGapFraction))
+squareGap = squareSize*squareGapFraction
+squareSpacing = squareSize + squareGap
+
+startGame()
+setInterval(loop, 1000.0/fps)
