@@ -226,8 +226,7 @@ canvas = document.getElementById("screen");
 ctx = canvas.getContext("2d")
 if (!ctx){
 	document.body.getElementById("html5Warning").innerHTML = "Please use a modern HTML5-Compatible browser!"
-	return
-}
+} else {
 
 foodSound = document.getElementById("foodSound")
 dieSound = document.getElementById("dieSound")
@@ -247,3 +246,4 @@ squareSpacing = squareSize + squareGap
 
 startGame()
 setInterval(loop, 1000.0/fps)
+}
