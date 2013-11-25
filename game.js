@@ -44,10 +44,18 @@ function GetColourFromHue(hue, scale, defaultR, defaultG, defaultB){
 	return "rgb("+Math.round((Math.abs(modx-3)-1)*scale*(255-defaultR)+defaultR)+','+Math.round((2-Math.abs(modx-2))*scale*(255-defaultG)+defaultG)+','+Math.round((2-Math.abs(modx-4))*scale*(255-defaultB)+defaultB)+')'
 }
 
+function isDot(x,y,i){
+	if (x < 0) x = gameDots - 1
+	if (y < 0) y = gameDots - 1
+	if (x > gameDots - 1) x = 0
+	if (y > gameDots - 1) y = 0
+	return snake[i].x == x && snake[i].y == y
+}
+
 function isEmptySpot(x,y,start){
 	if (!start) start = 0;
 	for (var i = start; i < snakeSize; i++){
-		if (snake[i].x == x && snake[i].y == y) return false
+		if (isDot(x,y,i)) return false
 	}
 	return true
 }
@@ -80,10 +88,18 @@ function startGame(){
 
 function onKeyDown(event){
 	switch(event.keyIdentifier){
-		case "Up": case "U+0057": snakeDir = (snakeDir==2)?snakeDir:0; break;
-		case "Right": case "U+0044": snakeDir = (snakeDir==3)?snakeDir:snakeDir = 1; break;
-		case "Down": case "U+0053": snakeDir = (snakeDir==0)?snakeDir:snakeDir = 2; break;
-		case "Left": case "U+0041": snakeDir = (snakeDir==1)?snakeDir:snakeDir = 3; break;
+		case "Up": case "U+0057":
+			if (!isDot(snake[0].x,snake[0].y-1,1)) snakeDir = 0;
+			break;
+		case "Right": case "U+0044":
+			if (!isDot(snake[0].x+1,snake[0].y,1)) snakeDir = 1;
+			break;
+		case "Down": case "U+0053":
+			if (!isDot(snake[0].x,snake[0].y+1,1)) snakeDir = 2;
+			break;
+		case "Left": case "U+0041":
+			if (!isDot(snake[0].x-1,snake[0].y,1)) snakeDir = 3;
+			break;
 		case "U+0052": startGame(); break;
 		default: console.log(event.keyIdentifier)
 	}
