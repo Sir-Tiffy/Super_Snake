@@ -92,21 +92,22 @@ function startGame(){
 }
 
 function onKeyDown(event){
-	switch(event.keyIdentifier){
-		case "Up": case "U+0057":
+	switch(event.keyCode){
+		case 38: case 87:
 			if (!isDot(snake[0].x,snake[0].y-1,1)) snakeDir = 0;
 			break;
-		case "Right": case "U+0044":
+		case 39: case 68:
 			if (!isDot(snake[0].x+1,snake[0].y,1)) snakeDir = 1;
 			break;
-		case "Down": case "U+0053":
+		case 40: case 83: 
 			if (!isDot(snake[0].x,snake[0].y+1,1)) snakeDir = 2;
 			break;
-		case "Left": case "U+0041":
+		case 37: case 65:
 			if (!isDot(snake[0].x-1,snake[0].y,1)) snakeDir = 3;
 			break;
-		case "U+0052": startGame(); break;
-		default: console.log(event.keyIdentifier)
+		case 82:
+			startGame();
+			break;
 	}
 }
 
