@@ -7,6 +7,7 @@ var gameTopColour = "#404040"
 var snakeColour = "white"
 var snakeHeadColour = "blue"
 var foodColour = "red"
+var title = "SUPER SNAKE"
 var squareGapFraction = 1/8
 
 var canvas
@@ -24,6 +25,7 @@ var rotationSpeed = 0
 var backgroundFade = 0
 var titleFade = 0
 var titleWobble = 0
+var titleSize = 96
 var currentRotation = 0
 var gameTop = 190
 var snakeDir = 0
@@ -84,6 +86,9 @@ function startGame(){
 	snake[0] = {x:Math.floor(gameDots/2),y:Math.floor(gameDots/2)}
 	snake[1] = {x:Math.floor(gameDots/2),y:Math.floor(gameDots/2)+1}
 	food = placeFood()
+	title = "SUPER SNAKE"
+	titleSize = 96
+	document.body.style.backgroundImage = "url('superText.png')"
 }
 
 function onKeyDown(event){
@@ -106,14 +111,13 @@ function onKeyDown(event){
 }
 
 function renderTitle(){
-	var title = "SUPER SNAKE"
 	var rotAmount = Math.cos(time*5)*Math.PI/64 * titleWobble
 	ctx.translate(canvas.width/2, 64)//canvas.height/2)
 	ctx.rotate(rotAmount)
 	ctx.translate(-canvas.width/2, -64)//-canvas.height/2)
 
 	ctx.fillStyle = GetColourFromHue(time*90, titleFade, 96,96,96)
-	ctx.font = "96px Comic Sans MS"
+	ctx.font = titleSize+"px Comic Sans MS"
 	var x = canvas.width/2 - ctx.measureText(title).width/2 + 8*Math.cos(time*3)*titleWobble
 	var y = 128 + 32*Math.sin(time)*titleWobble
 	ctx.fillText(title,x,y)
@@ -157,14 +161,24 @@ function updateGame(){
 			foodSound.play()
 			if (score == 9) song.play()
 			else if (score == 10) song.pause()
-		} else if (!isEmptySpot(newX, newY)){
-			dieSound.play()
-			startGame()
+			else if (score == 20){
+				title = "SUPER DUPER SNAKE"
+				titleSize = 64
+				document.body.style.backgroundImage = "url('superDuperText.png')"
+				song.play()
+			}
 		} else {
 			newDot = snake.pop()
-			newDot.x = newX
-			newDot.y = newY
-			snake.unshift(newDot)
+			snakeSize = snakeSize - 1
+			if (isEmptySpot(newX,newY)){
+				snakeSize = snakeSize + 1
+				newDot.x = newX
+				newDot.y = newY
+				snake.unshift(newDot)
+			} else {
+				dieSound.play()
+				startGame()
+			}
 		}
 	}
 
@@ -196,13 +210,11 @@ function updateGame(){
 		backgroundFade -= deltaTime/8.0;
 		if (backgroundFade < 0) backgroundFade = 0;
 	}
-	backgroundColour = GetColourFromHue(currentRotation, backgroundFade,20,20,20)
+	backgroundColour = GetColourFromHue(currentRotation, backgroundFade,31,31,31)
 }
 
 function renderGame(){
-
-	ctx.fillStyle = backgroundColour
-	ctx.fillRect(Math.floor(gameCentreX-gameDiag/2-1),Math.floor(gameCentreY-gameDiag/2-2),Math.ceil(gameDiag+3),Math.ceil(gameDiag+3))
+	ctx.clearRect(Math.floor(gameCentreX-gameDiag/2-1),Math.floor(gameCentreY-gameDiag/2-2),Math.ceil(gameDiag+3),Math.ceil(gameDiag+3))
 
 	ctx.translate(gameCentreX, gameCentreY)
 	ctx.rotate(currentRotation*Math.PI/180)
