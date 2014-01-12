@@ -243,8 +243,12 @@ function renderGame(){
 
 function loop(){
 	time += deltaTime
-	renderTitle()
 	updateGame()
+}
+
+function renderLoop(){
+	requestAnimFrame(renderLoop)
+	renderTitle()
 	renderGame()
 }
 
@@ -257,22 +261,26 @@ if (!ctx){
 	document.body.getElementById("html5Warning").innerHTML = "Please use a modern HTML5-Compatible browser!"
 } else {
 
-foodSound = document.getElementById("foodSound")
-dieSound = document.getElementById("dieSound")
-song = document.getElementById("song")
+	foodSound = document.getElementById("foodSound")
+	dieSound = document.getElementById("dieSound")
+	song = document.getElementById("song")
 
-deltaTime = 1.0/fps
-gameScreenWidth = canvas.width
-gameScreenHeight = canvas.height-gameTop
-gameDiag = (gameScreenWidth < gameScreenHeight)?gameScreenWidth:gameScreenHeight
-gameSize = gameDiag/Math.sqrt(2)
-gameCentreX = gameScreenWidth/2
-gameCentreY = gameTop+gameScreenHeight/2
+	deltaTime = 1/fps
 
-squareSize = gameSize/(gameDots*(1+squareGapFraction))
-squareGap = squareSize*squareGapFraction
-squareSpacing = squareSize + squareGap
+	gameScreenWidth = canvas.width
+	gameScreenHeight = canvas.height-gameTop
+	gameDiag = (gameScreenWidth < gameScreenHeight)?gameScreenWidth:gameScreenHeight
+	gameSize = gameDiag/Math.sqrt(2)
+	gameCentreX = gameScreenWidth/2
+	gameCentreY = gameTop+gameScreenHeight/2
 
-startGame()
-setInterval(loop, 1000.0/fps)
+	squareSize = gameSize/(gameDots*(1+squareGapFraction))
+	squareGap = squareSize*squareGapFraction
+	squareSpacing = squareSize + squareGap
+
+	startGame()
+	setInterval(loop, 1000.0/fps)
+	window.requestAnimFrame = (function(){
+		return window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||function(func){window.setTimeout(func,1000/fps);};})();
+	renderLoop();
 }
