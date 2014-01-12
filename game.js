@@ -227,6 +227,11 @@ function renderGame(){
 	ctx.fillStyle = grad
 	ctx.fillRect(gameCentreX-gameSize/2,gameCentreY-gameSize/2,gameSize,gameSize)
 
+	ctx.font = "96px Comic Sans MS"
+	var textSize = ctx.measureText(score)
+	ctx.fillStyle = GetColourFromHue(score*15,score/20,0,0,0)
+	ctx.fillText(score,gameCentreX-textSize.width/2,gameCentreY+37)
+
 	ctx.fillStyle = snakeColour
 	for (var i = 1; i < snakeSize; i++){
 		drawDot(snake[i].x,snake[i].y)
