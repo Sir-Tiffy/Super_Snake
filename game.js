@@ -211,7 +211,7 @@ function updateGame(){
 		backgroundFade -= deltaTime/8.0;
 		if (backgroundFade < 0) backgroundFade = 0;
 	}
-	backgroundColour = GetColourFromHue(currentRotation, backgroundFade,31,31,31)
+	backgroundColour = GetColourFromHue(currentRotation, backgroundFade,32,32,32)
 }
 
 function renderGame(){
@@ -227,10 +227,12 @@ function renderGame(){
 	ctx.fillStyle = grad
 	ctx.fillRect(gameCentreX-gameSize/2,gameCentreY-gameSize/2,gameSize,gameSize)
 
-	ctx.font = "96px Comic Sans MS"
-	var textSize = ctx.measureText(score)
-	ctx.fillStyle = GetColourFromHue(score*15,score/20,0,0,0)
-	ctx.fillText(score,gameCentreX-textSize.width/2,gameCentreY+37)
+	if (score > 0){
+		ctx.font = "256px Comic Sans MS"
+		var textSize = ctx.measureText(score)
+		ctx.fillStyle = GetColourFromHue(score*15,score/20,0,0,0)
+		ctx.fillText(score,gameCentreX-textSize.width/2,gameCentreY+96)
+	}
 
 	ctx.fillStyle = snakeColour
 	for (var i = 1; i < snakeSize; i++){
